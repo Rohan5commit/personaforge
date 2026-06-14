@@ -16,7 +16,7 @@ export const creatorPersonas: Persona[] = [
     id: "p2", name: "Devon Harris", ageRange: "28-35", role: "Fitness creator, 120K Instagram",
     incomeBand: "medium", educationBand: "Bachelors",
     goals: ["Launch workout plans", "Build membership community", "Stop chasing brand deals"],
-    frustrations: ["Instagram算法变化频繁", "Ad revenue is unreliable", "Hard to monetize workout content directly"],
+    frustrations: ["Instagram algorithm changes constantly", "Ad revenue is unreliable", "Hard to monetize workout content directly"],
     toolsCurrentlyUsed: ["Instagram", "Teachable", "PayPal"],
     buyingBehavior: "Needs proof of concept before committing",
     objections: ["Tried Patreon, low conversion", "Worried about alienating free audience"],
