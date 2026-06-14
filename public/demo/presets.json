@@ -1,0 +1,48 @@
+{
+  "presets": [
+    {
+      "id": "ai-study-assistant",
+      "name": "AI Study Assistant",
+      "icon": "BookOpen",
+      "idea": "AI-powered study assistant that adapts to individual learning styles",
+      "description": "An intelligent tutoring platform that uses AI to analyze a student's learning patterns, strengths, and weaknesses. It generates personalized study plans, practice questions, and explains concepts in the format that works best for each student - whether that's visual diagrams, step-by-step walkthroughs, analogies, or Socratic questioning.",
+      "audienceType": "Students (high school and college)",
+      "market": "US and Europe",
+      "pricingModel": "Freemium with premium subscription ($9.99/mo for full features)",
+      "stage": "MVP ready for beta testing"
+    },
+    {
+      "id": "student-fintech",
+      "name": "Student Fintech Budgeting App",
+      "icon": "Wallet",
+      "idea": "Smart budgeting app designed specifically for college students",
+      "description": "A mobile-first financial management app built for college students. It automatically categorizes spending, alerts students before overdrafts, splits bills with roommates, tracks financial aid and loan disbursements, and provides gamified savings challenges. Integrates with campus meal plans and student discount programs.",
+      "audienceType": "College students aged 18-24",
+      "market": "US college students",
+      "pricingModel": "Free with optional premium features ($4.99/mo)",
+      "stage": "Early prototype"
+    },
+    {
+      "id": "telemedicine",
+      "name": "Telemedicine Platform",
+      "icon": "Stethoscope",
+      "idea": "On-demand telemedicine platform for rural and underserved communities",
+      "description": "A telemedicine platform connecting patients in rural and underserved areas with licensed physicians via video consultations. Features include symptom triage, prescription delivery partnerships, chronic disease management programs, mental health support, and multilingual interface. Works on low-bandwidth connections.",
+      "audienceType": "Adults in rural areas with limited healthcare access",
+      "market": "Rural United States",
+      "pricingModel": "Pay-per-visit ($49-$99) with insurance integration",
+      "stage": "Post-MVP, seeking product-market fit"
+    },
+    {
+      "id": "creator-tools",
+      "name": "Creator Monetization SaaS",
+      "icon": "Palette",
+      "idea": "All-in-one monetization platform for content creators and influencers",
+      "description": "A comprehensive SaaS platform that helps content creators monetize their audience beyond ad revenue. Includes membership tiers, digital product storefronts, exclusive community spaces, analytics dashboard, automated brand deal matching, and payment processing. Designed for creators with 1K-100K followers who want to build sustainable income.",
+      "audienceType": "Content creators, influencers, and newsletter writers",
+      "market": "Global, English-speaking creators",
+      "pricingModel": "Tiered SaaS: Starter ($19/mo), Pro ($49/mo), Enterprise ($99/mo)",
+      "stage": "MVP with first paying customers"
+    }
+  ]
+}
