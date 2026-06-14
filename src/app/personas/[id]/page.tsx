@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useState, use } from "react";
 import Link from "next/link";
 import { Nav } from "@/components/shared/nav";
 import { Card } from "@/components/ui/card";
@@ -17,69 +17,38 @@ import {
   BarChart3,
   AlertTriangle,
 } from "lucide-react";
-import { getRunResults } from "@/app/actions";
-import { getRunFromStorage } from "@/lib/client-storage";
 import type { Persona, InterviewResponse, PersonaScore, InsightSummary } from "@/lib/schemas";
 
-type PersonaData = {
+function loadFromStorage(id: string): {
   personas: Persona[];
   interviews: InterviewResponse[];
   scores: PersonaScore[];
   insights: InsightSummary;
-} | null;
-
-function getInitialData(id: string): PersonaData {
-  const stored = getRunFromStorage(id);
-  if (stored?.output) {
-    return {
-      personas: stored.output.personas,
-      interviews: stored.output.interviews,
-      scores: stored.output.scores,
-      insights: stored.output.insights,
-    };
-  }
+} | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem(`personaforge_run_${id}`);
+    if (stored) {
+      const data = JSON.parse(stored);
+      if (data?.output) {
+        return {
+          personas: data.output.personas,
+          interviews: data.output.interviews,
+          scores: data.output.scores,
+          insights: data.output.insights,
+        };
+      }
+    }
+  } catch {}
   return null;
 }
 
 export default function PersonasPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const [data, setData] = useState<PersonaData>(() => getInitialData(id));
+  const [data] = useState(() => loadFromStorage(id));
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
-  const [error, setError] = useState(() => !getInitialData(id));
 
-  useEffect(() => {
-    if (data) return;
-
-    const controller = new AbortController();
-
-    getRunResults(id).then((run) => {
-      if (controller.signal.aborted) return;
-      if (run?.output) {
-        setData({
-          personas: run.output.personas,
-          interviews: run.output.interviews,
-          scores: run.output.scores,
-          insights: run.output.insights,
-        });
-        setError(false);
-      } else {
-        setError(true);
-      }
-    }).catch(() => {
-      if (!controller.signal.aborted) setError(true);
-    });
-
-    const timeout = setTimeout(() => {
-      if (!controller.signal.aborted) setError(true);
-    }, 15000);
-
-    return () => {
-      controller.abort();
-      clearTimeout(timeout);
-    };
-  }, [id, data]);
-
-  if (error) {
+  if (!data) {
     return (
       <div className="min-h-screen">
         <Nav />

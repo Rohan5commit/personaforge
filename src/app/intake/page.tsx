@@ -102,7 +102,7 @@ export default function IntakePage() {
     try {
       const result = await startRun(form);
       localStorage.setItem(`personaforge_run_${result.id}`, JSON.stringify(result));
-      router.push(`/run/${result.id}`);
+      router.push(`/insights/${result.id}`);
     } catch (err) {
       console.error(err);
       setError("Something went wrong. Please try again.");

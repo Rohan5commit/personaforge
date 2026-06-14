@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useState, use } from "react";
 import Link from "next/link";
 import { Nav } from "@/components/shared/nav";
 import { Card } from "@/components/ui/card";
@@ -18,65 +18,35 @@ import {
   ArrowRight,
   FileText,
 } from "lucide-react";
-import { getRunResults } from "@/app/actions";
-import { getRunFromStorage } from "@/lib/client-storage";
 import type { InsightSummary, Persona, PersonaScore } from "@/lib/schemas";
 
-type DataState = {
+function loadFromStorage(id: string): {
   insight: InsightSummary;
   personas: Persona[];
   scores: PersonaScore[];
-} | null;
-
-function getInitialData(id: string): DataState {
-  const stored = getRunFromStorage(id);
-  if (stored?.output) {
-    return {
-      insight: stored.output.insights,
-      personas: stored.output.personas,
-      scores: stored.output.scores,
-    };
-  }
+} | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem(`personaforge_run_${id}`);
+    if (stored) {
+      const data = JSON.parse(stored);
+      if (data?.output) {
+        return {
+          insight: data.output.insights,
+          personas: data.output.personas,
+          scores: data.output.scores,
+        };
+      }
+    }
+  } catch {}
   return null;
 }
 
 export default function InsightsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const [data, setData] = useState<DataState>(() => getInitialData(id));
-  const [error, setError] = useState(() => !getInitialData(id));
+  const [data] = useState(() => loadFromStorage(id));
 
-  useEffect(() => {
-    if (data) return;
-
-    const controller = new AbortController();
-
-    getRunResults(id).then((run) => {
-      if (controller.signal.aborted) return;
-      if (run?.output) {
-        setData({
-          insight: run.output.insights,
-          personas: run.output.personas,
-          scores: run.output.scores,
-        });
-        setError(false);
-      } else {
-        setError(true);
-      }
-    }).catch(() => {
-      if (!controller.signal.aborted) setError(true);
-    });
-
-    const timeout = setTimeout(() => {
-      if (!controller.signal.aborted) setError(true);
-    }, 15000);
-
-    return () => {
-      controller.abort();
-      clearTimeout(timeout);
-    };
-  }, [id, data]);
-
-  if (error && !data) {
+  if (!data) {
     return (
       <div className="min-h-screen">
         <Nav />
@@ -89,17 +59,6 @@ export default function InsightsPage({ params }: { params: Promise<{ id: string 
           <Link href="/intake">
             <Button>Start a New Run</Button>
           </Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="min-h-screen">
-        <Nav />
-        <div className="flex items-center justify-center py-32 text-muted-foreground">
-          Loading insights...
         </div>
       </div>
     );

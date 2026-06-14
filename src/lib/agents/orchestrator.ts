@@ -6,7 +6,6 @@ import { synthesizeInsights } from "./insight-synthesizer";
 import { formatLaunchBrief } from "./launch-brief-formatter";
 import {
   ProductInput,
-  AgentRun,
   AgentStep,
   Persona,
   InterviewResponse,
@@ -14,8 +13,6 @@ import {
   InsightSummary,
   LaunchBrief,
 } from "@/lib/schemas";
-
-const RUNS = new Map<string, AgentRun>();
 
 function generateId(): string {
   return `run_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -75,11 +72,11 @@ function createSteps(): AgentStep[] {
 }
 
 function updateStep(
-  run: AgentRun,
+  steps: AgentStep[],
   stepName: string,
   status: AgentStep["status"]
 ) {
-  const step = run.steps.find((s) => s.name === stepName);
+  const step = steps.find((s) => s.name === stepName);
   if (step) {
     step.status = status;
     if (status === "running") step.startedAt = new Date().toISOString();
@@ -88,28 +85,20 @@ function updateStep(
   }
 }
 
-export function getRun(id: string): AgentRun | undefined {
-  return RUNS.get(id);
-}
-
-export function getAllRuns(): AgentRun[] {
-  return Array.from(RUNS.values()).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
-}
-
-export function createRunEntry(input: ProductInput): AgentRun {
-  const id = generateId();
-  const run: AgentRun = {
-    id,
-    status: "pending",
-    steps: createSteps(),
-    input,
-    output: null,
-    createdAt: new Date().toISOString(),
-  };
-  RUNS.set(id, run);
-  return run;
+export interface RunResult {
+  id: string;
+  status: "completed" | "failed";
+  input: ProductInput;
+  output: {
+    personas: Persona[];
+    interviews: InterviewResponse[];
+    scores: PersonaScore[];
+    insights: InsightSummary;
+    brief: LaunchBrief;
+  } | null;
+  steps: AgentStep[];
+  createdAt: string;
+  completedAt: string;
 }
 
 // Demo data for fast demo mode
@@ -139,7 +128,7 @@ function getDemoData(_input: ProductInput): {
       goals: ["Improve GPA", "Study less but learn more", "Get into grad school"],
       frustrations: ["Procrastination", "One-size-fits-all approaches", "Can't find study groups"],
       toolsCurrentlyUsed: ["Anki", "Discord", "YouTube"],
-      buyingBehavior: "Impulse buyer if peer推荐, price-sensitive",
+      buyingBehavior: "Impulse buyer if peer recommended, price-sensitive",
       objections: ["Free alternatives exist", "Don't trust AI to know my level"],
       preferredChannels: ["TikTok", "Discord", "Twitter"],
       quoteSnippets: ["I need something that knows when I'm struggling", "Show me it works before I pay"],
@@ -359,17 +348,10 @@ function getDemoData(_input: ProductInput): {
   return { personas, interviews, scores, insights, brief };
 }
 
-export async function executeRun(input: ProductInput): Promise<AgentRun> {
+export async function executeRun(input: ProductInput): Promise<RunResult> {
   const id = generateId();
-  const run: AgentRun = {
-    id,
-    status: "running",
-    steps: createSteps(),
-    input,
-    output: null,
-    createdAt: new Date().toISOString(),
-  };
-  RUNS.set(id, run);
+  const steps = createSteps();
+  const createdAt = new Date().toISOString();
 
   try {
     // Check if this is a demo preset (fast path)
@@ -381,74 +363,93 @@ export async function executeRun(input: ProductInput): Promise<AgentRun> {
 
     if (isDemoPreset) {
       // Fast demo mode: use pre-generated data
-      updateStep(run, "normalize", "running");
+      updateStep(steps, "normalize", "running");
       await new Promise((r) => setTimeout(r, 200));
-      updateStep(run, "normalize", "completed");
+      updateStep(steps, "normalize", "completed");
 
-      updateStep(run, "personas", "running");
+      updateStep(steps, "personas", "running");
       await new Promise((r) => setTimeout(r, 500));
-      updateStep(run, "personas", "completed");
+      updateStep(steps, "personas", "completed");
 
-      updateStep(run, "interviews", "running");
+      updateStep(steps, "interviews", "running");
       await new Promise((r) => setTimeout(r, 500));
-      updateStep(run, "interviews", "completed");
+      updateStep(steps, "interviews", "completed");
 
-      updateStep(run, "critic", "running");
+      updateStep(steps, "critic", "running");
       await new Promise((r) => setTimeout(r, 300));
-      updateStep(run, "critic", "completed");
+      updateStep(steps, "critic", "completed");
 
-      updateStep(run, "insights", "running");
+      updateStep(steps, "insights", "running");
       await new Promise((r) => setTimeout(r, 400));
-      updateStep(run, "insights", "completed");
+      updateStep(steps, "insights", "completed");
 
-      updateStep(run, "brief", "running");
+      updateStep(steps, "brief", "running");
       await new Promise((r) => setTimeout(r, 300));
-      updateStep(run, "brief", "completed");
+      updateStep(steps, "brief", "completed");
 
       const demoData = getDemoData(input);
-      run.output = demoData;
-    } else {
-      // Full AI pipeline for custom inputs
-      updateStep(run, "normalize", "running");
-      const normalized = await normalizeIntake(input);
-      updateStep(run, "normalize", "completed");
-
-      updateStep(run, "personas", "running");
-      let personas = await generatePersonas(normalized);
-      updateStep(run, "personas", "completed");
-
-      updateStep(run, "interviews", "running");
-      let interviews = await simulateInterviews(personas, normalized);
-      updateStep(run, "interviews", "completed");
-
-      updateStep(run, "critic", "running");
-      let criticResult = await evaluatePersonas(personas, interviews);
-      let retryCount = 0;
-      while (criticResult.needsRetry && retryCount < 2) {
-        retryCount++;
-        personas = await generatePersonas(normalized);
-        interviews = await simulateInterviews(personas, normalized);
-        criticResult = await evaluatePersonas(personas, interviews);
-      }
-      updateStep(run, "critic", "completed");
-
-      updateStep(run, "insights", "running");
-      const insights = await synthesizeInsights(personas, interviews, criticResult.scores);
-      updateStep(run, "insights", "completed");
-
-      updateStep(run, "brief", "running");
-      const brief = await formatLaunchBrief(normalized, insights);
-      updateStep(run, "brief", "completed");
-
-      run.output = { personas, interviews, scores: criticResult.scores, insights, brief };
+      return {
+        id,
+        status: "completed",
+        input,
+        output: demoData,
+        steps,
+        createdAt,
+        completedAt: new Date().toISOString(),
+      };
     }
 
-    run.status = "completed";
-    run.completedAt = new Date().toISOString();
-  } catch (error) {
-    run.status = "failed";
-    console.error("Agent run failed:", error);
-  }
+    // Full AI pipeline for custom inputs
+    updateStep(steps, "normalize", "running");
+    const normalized = await normalizeIntake(input);
+    updateStep(steps, "normalize", "completed");
 
-  return run;
+    updateStep(steps, "personas", "running");
+    let personas = await generatePersonas(normalized);
+    updateStep(steps, "personas", "completed");
+
+    updateStep(steps, "interviews", "running");
+    let interviews = await simulateInterviews(personas, normalized);
+    updateStep(steps, "interviews", "completed");
+
+    updateStep(steps, "critic", "running");
+    let criticResult = await evaluatePersonas(personas, interviews);
+    let retryCount = 0;
+    while (criticResult.needsRetry && retryCount < 2) {
+      retryCount++;
+      personas = await generatePersonas(normalized);
+      interviews = await simulateInterviews(personas, normalized);
+      criticResult = await evaluatePersonas(personas, interviews);
+    }
+    updateStep(steps, "critic", "completed");
+
+    updateStep(steps, "insights", "running");
+    const insights = await synthesizeInsights(personas, interviews, criticResult.scores);
+    updateStep(steps, "insights", "completed");
+
+    updateStep(steps, "brief", "running");
+    const brief = await formatLaunchBrief(normalized, insights);
+    updateStep(steps, "brief", "completed");
+
+    return {
+      id,
+      status: "completed",
+      input,
+      output: { personas, interviews, scores: criticResult.scores, insights, brief },
+      steps,
+      createdAt,
+      completedAt: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error("Agent run failed:", error);
+    return {
+      id,
+      status: "failed",
+      input,
+      output: null,
+      steps,
+      createdAt,
+      completedAt: new Date().toISOString(),
+    };
+  }
 }

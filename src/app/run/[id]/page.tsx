@@ -7,65 +7,47 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Circle, Loader2, XCircle, AlertTriangle } from "lucide-react";
-import { getRunStatus } from "@/app/actions";
+import type { AgentStep } from "@/lib/schemas";
 
-interface StepStatus {
-  name: string;
-  status: "pending" | "running" | "completed" | "failed";
-  agentName: string;
-  description: string;
-  retryCount: number;
-}
-
-function getInitialSteps(id: string): { steps: StepStatus[]; status: string; complete: boolean } {
-  if (typeof window === "undefined") return { steps: [], status: "pending", complete: false };
+function getStoredRun(id: string): { steps: AgentStep[]; status: string } | null {
+  if (typeof window === "undefined") return null;
   try {
     const stored = localStorage.getItem(`personaforge_run_${id}`);
     if (stored) {
       const data = JSON.parse(stored);
-      return {
-        steps: data.steps || [],
-        status: data.status || "pending",
-        complete: data.status === "completed",
-      };
+      return { steps: data.steps || [], status: data.status || "pending" };
     }
   } catch {}
-  return { steps: [], status: "pending", complete: false };
+  return null;
 }
 
 export default function RunPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const initial = getInitialSteps(id);
-  const [steps, setSteps] = useState<StepStatus[]>(initial.steps);
-  const [overallStatus, setOverallStatus] = useState<string>(initial.status);
+  const stored = getStoredRun(id);
+  const [steps, setSteps] = useState<AgentStep[]>(stored?.steps || []);
+  const [overallStatus, setOverallStatus] = useState(stored?.status || "pending");
 
   useEffect(() => {
-    if (initial.complete) {
+    if (overallStatus === "completed") {
       router.push(`/insights/${id}`);
       return;
     }
 
-    const poll = async () => {
-      try {
-        const run = await getRunStatus(id);
-        if (!run) return;
-
-        setSteps(run.steps);
-        setOverallStatus(run.status);
-
-        if (run.status === "completed") {
-          setTimeout(() => router.push(`/insights/${id}`), 1500);
+    const interval = setInterval(() => {
+      const data = getStoredRun(id);
+      if (data) {
+        setSteps(data.steps);
+        setOverallStatus(data.status);
+        if (data.status === "completed") {
+          clearInterval(interval);
+          router.push(`/insights/${id}`);
         }
-      } catch (err) {
-        console.error("Poll error:", err);
       }
-    };
+    }, 500);
 
-    poll();
-    const interval = setInterval(poll, 2000);
     return () => clearInterval(interval);
-  }, [id, router, initial.complete]);
+  }, [id, router, overallStatus]);
 
   const completedCount = steps.filter((s) => s.status === "completed").length;
   const progress = steps.length > 0 ? (completedCount / steps.length) * 100 : 0;
@@ -121,7 +103,7 @@ export default function RunPage({ params }: { params: Promise<{ id: string }> })
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-sm">{step.agentName}</span>
-                    {step.retryCount > 0 && (
+                    {"retryCount" in step && step.retryCount > 0 && (
                       <Badge variant="outline" className="text-xs">
                         Retry {step.retryCount}
                       </Badge>
