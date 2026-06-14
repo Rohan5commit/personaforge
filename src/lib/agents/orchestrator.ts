@@ -199,11 +199,16 @@ export async function executeRun(input: ProductInput): Promise<RunResult> {
 
     updateStep(steps, "critic", "running");
     let criticResult = await evaluatePersonas(personas, interviews);
-    let retryCount = 0;
-    while (criticResult.needsRetry && retryCount < 2) {
-      retryCount++;
+    const criticStep = steps.find((s) => s.name === "critic")!;
+    while (criticResult.needsRetry && criticStep.retryCount < criticStep.maxRetries) {
+      criticStep.retryCount++;
+      criticStep.description = `Retry ${criticStep.retryCount}/${criticStep.maxRetries}: Regenerating personas (low diversity)`;
+      updateStep(steps, "personas", "running");
       personas = await generatePersonas(normalized);
+      updateStep(steps, "personas", "completed");
+      updateStep(steps, "interviews", "running");
       interviews = await simulateInterviews(personas, normalized);
+      updateStep(steps, "interviews", "completed");
       criticResult = await evaluatePersonas(personas, interviews);
     }
     updateStep(steps, "critic", "completed");
