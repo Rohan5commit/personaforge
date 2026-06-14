@@ -107,12 +107,17 @@ export const creatorInterviews: InterviewResponse[] = creatorPersonas.map((p) =>
   ],
 }));
 
+const CREATOR_DIVERSITY = [0.78, 0.84, 0.71, 0.89, 0.76, 0.82, 0.68, 0.86];
+const CREATOR_REALISM   = [0.85, 0.79, 0.73, 0.91, 0.80, 0.87, 0.74, 0.82];
+const CREATOR_UNIQUENESS = [0.72, 0.86, 0.68, 0.93, 0.75, 0.81, 0.70, 0.88];
+const CREATOR_OVERALL   = [0.78, 0.83, 0.71, 0.91, 0.77, 0.83, 0.71, 0.85];
+
 export const creatorScores: PersonaScore[] = creatorPersonas.map((p, i) => ({
   personaId: p.id,
-  diversityScore: 0.77 + (i * 0.03),
-  realismScore: 0.83 + (i * 0.02),
-  uniquenessScore: 0.76 + (i * 0.03),
-  overallScore: 0.79 + (i * 0.02),
+  diversityScore: CREATOR_DIVERSITY[i],
+  realismScore: CREATOR_REALISM[i],
+  uniquenessScore: CREATOR_UNIQUENESS[i],
+  overallScore: CREATOR_OVERALL[i],
 }));
 
 export const creatorInsights: InsightSummary = {

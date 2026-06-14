@@ -107,12 +107,17 @@ export const studyInterviews: InterviewResponse[] = studyPersonas.map((p) => ({
   ],
 }));
 
+const STUDY_DIVERSITY = [0.82, 0.74, 0.91, 0.68, 0.85, 0.71, 0.79, 0.88];
+const STUDY_REALISM   = [0.88, 0.76, 0.93, 0.72, 0.81, 0.69, 0.84, 0.90];
+const STUDY_UNIQUENESS = [0.79, 0.65, 0.92, 0.71, 0.83, 0.67, 0.76, 0.86];
+const STUDY_OVERALL   = [0.83, 0.72, 0.92, 0.70, 0.83, 0.69, 0.80, 0.88];
+
 export const studyScores: PersonaScore[] = studyPersonas.map((p, i) => ({
   personaId: p.id,
-  diversityScore: 0.78 + (i * 0.03),
-  realismScore: 0.82 + (i * 0.02),
-  uniquenessScore: 0.75 + (i * 0.03),
-  overallScore: 0.78 + (i * 0.025),
+  diversityScore: STUDY_DIVERSITY[i],
+  realismScore: STUDY_REALISM[i],
+  uniquenessScore: STUDY_UNIQUENESS[i],
+  overallScore: STUDY_OVERALL[i],
 }));
 
 export const studyInsights: InsightSummary = {

@@ -107,12 +107,17 @@ export const healthInterviews: InterviewResponse[] = healthPersonas.map((p) => (
   ],
 }));
 
+const HEALTH_DIVERSITY = [0.85, 0.72, 0.91, 0.67, 0.80, 0.76, 0.88, 0.74];
+const HEALTH_REALISM   = [0.90, 0.78, 0.87, 0.73, 0.82, 0.69, 0.92, 0.79];
+const HEALTH_UNIQUENESS = [0.81, 0.68, 0.89, 0.71, 0.77, 0.84, 0.83, 0.70];
+const HEALTH_OVERALL   = [0.85, 0.73, 0.89, 0.70, 0.80, 0.76, 0.88, 0.74];
+
 export const healthScores: PersonaScore[] = healthPersonas.map((p, i) => ({
   personaId: p.id,
-  diversityScore: 0.79 + (i * 0.025),
-  realismScore: 0.81 + (i * 0.02),
-  uniquenessScore: 0.77 + (i * 0.025),
-  overallScore: 0.79 + (i * 0.02),
+  diversityScore: HEALTH_DIVERSITY[i],
+  realismScore: HEALTH_REALISM[i],
+  uniquenessScore: HEALTH_UNIQUENESS[i],
+  overallScore: HEALTH_OVERALL[i],
 }));
 
 export const healthInsights: InsightSummary = {

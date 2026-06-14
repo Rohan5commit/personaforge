@@ -2,7 +2,6 @@
 
 import { executeRun } from "@/lib/agents/orchestrator";
 import { ProductInputSchema } from "@/lib/schemas";
-import { z } from "zod";
 
 const MAX_FIELD_LENGTHS: Record<string, number> = {
   idea: 200,

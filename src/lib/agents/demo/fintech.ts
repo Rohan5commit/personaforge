@@ -107,12 +107,17 @@ export const fintechInterviews: InterviewResponse[] = fintechPersonas.map((p) =>
   ],
 }));
 
+const FINTECH_DIVERSITY = [0.73, 0.86, 0.69, 0.81, 0.77, 0.90, 0.72, 0.84];
+const FINTECH_REALISM   = [0.80, 0.89, 0.74, 0.83, 0.78, 0.92, 0.71, 0.85];
+const FINTECH_UNIQUENESS = [0.68, 0.82, 0.71, 0.87, 0.75, 0.88, 0.66, 0.79];
+const FINTECH_OVERALL   = [0.74, 0.86, 0.71, 0.84, 0.77, 0.90, 0.70, 0.83];
+
 export const fintechScores: PersonaScore[] = fintechPersonas.map((p, i) => ({
   personaId: p.id,
-  diversityScore: 0.76 + (i * 0.03),
-  realismScore: 0.80 + (i * 0.02),
-  uniquenessScore: 0.74 + (i * 0.03),
-  overallScore: 0.77 + (i * 0.025),
+  diversityScore: FINTECH_DIVERSITY[i],
+  realismScore: FINTECH_REALISM[i],
+  uniquenessScore: FINTECH_UNIQUENESS[i],
+  overallScore: FINTECH_OVERALL[i],
 }));
 
 export const fintechInsights: InsightSummary = {
