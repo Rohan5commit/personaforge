@@ -19,6 +19,7 @@ import {
   FileText,
 } from "lucide-react";
 import { getRunResults } from "@/app/actions";
+import { getRunFromStorage } from "@/lib/client-storage";
 import type { InsightSummary, Persona, PersonaScore } from "@/lib/schemas";
 
 export default function InsightsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -30,6 +31,18 @@ export default function InsightsPage({ params }: { params: Promise<{ id: string 
   } | null>(null);
 
   useEffect(() => {
+    // Try localStorage first (instant)
+    const stored = getRunFromStorage(id);
+    if (stored?.output) {
+      setData({
+        insight: stored.output.insights,
+        personas: stored.output.personas,
+        scores: stored.output.scores,
+      });
+      return;
+    }
+
+    // Fallback to server action
     getRunResults(id).then((run) => {
       if (run?.output) {
         setData({

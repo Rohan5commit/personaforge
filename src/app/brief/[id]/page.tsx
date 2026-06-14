@@ -16,6 +16,7 @@ import {
   FileText,
 } from "lucide-react";
 import { getRunResults } from "@/app/actions";
+import { getRunFromStorage } from "@/lib/client-storage";
 import type { LaunchBrief, ProductInput } from "@/lib/schemas";
 
 export default function BriefPage({ params }: { params: Promise<{ id: string }> }) {
@@ -24,6 +25,15 @@ export default function BriefPage({ params }: { params: Promise<{ id: string }> 
   const [input, setInput] = useState<ProductInput | null>(null);
 
   useEffect(() => {
+    // Try localStorage first
+    const stored = getRunFromStorage(id);
+    if (stored?.output) {
+      setBrief(stored.output.brief);
+      setInput(stored.input);
+      return;
+    }
+
+    // Fallback to server action
     getRunResults(id).then((run) => {
       if (run?.output) {
         setBrief(run.output.brief);

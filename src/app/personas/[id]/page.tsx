@@ -17,6 +17,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { getRunResults } from "@/app/actions";
+import { getRunFromStorage } from "@/lib/client-storage";
 import type { Persona, InterviewResponse, PersonaScore, InsightSummary } from "@/lib/schemas";
 
 export default function PersonasPage({ params }: { params: Promise<{ id: string }> }) {
@@ -30,6 +31,19 @@ export default function PersonasPage({ params }: { params: Promise<{ id: string 
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
 
   useEffect(() => {
+    // Try localStorage first
+    const stored = getRunFromStorage(id);
+    if (stored?.output) {
+      setData({
+        personas: stored.output.personas,
+        interviews: stored.output.interviews,
+        scores: stored.output.scores,
+        insights: stored.output.insights,
+      });
+      return;
+    }
+
+    // Fallback to server action
     getRunResults(id).then((run) => {
       if (run?.output) {
         setData({

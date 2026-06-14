@@ -24,6 +24,23 @@ export default function RunPage({ params }: { params: Promise<{ id: string }> })
   const [overallStatus, setOverallStatus] = useState<string>("pending");
 
   useEffect(() => {
+    // First check localStorage for instant completion
+    const stored = localStorage.getItem(`personaforge_run_${id}`);
+    if (stored) {
+      try {
+        const data = JSON.parse(stored);
+        if (data.status === "completed") {
+          // Already complete, redirect immediately
+          router.push(`/insights/${id}`);
+          return;
+        }
+        if (data.steps) {
+          setSteps(data.steps);
+          setOverallStatus(data.status);
+        }
+      } catch {}
+    }
+
     const poll = async () => {
       try {
         const run = await getRunStatus(id);
@@ -34,8 +51,6 @@ export default function RunPage({ params }: { params: Promise<{ id: string }> })
 
         if (run.status === "completed") {
           setTimeout(() => router.push(`/insights/${id}`), 1500);
-        } else if (run.status === "failed") {
-          // stay on page to show error
         }
       } catch (err) {
         console.error("Poll error:", err);

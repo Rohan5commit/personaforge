@@ -99,6 +99,8 @@ export default function IntakePage() {
     setLoading(true);
     try {
       const result = await startRun(form);
+      // Store full run data in localStorage for client-side access
+      localStorage.setItem(`personaforge_run_${result.id}`, JSON.stringify(result));
       router.push(`/run/${result.id}`);
     } catch (err) {
       console.error(err);
