@@ -93,17 +93,27 @@ export function getAllRuns(): AgentRun[] {
   );
 }
 
-export async function executeRun(input: ProductInput): Promise<AgentRun> {
+export function createRunEntry(input: ProductInput): AgentRun {
   const id = generateId();
   const run: AgentRun = {
     id,
-    status: "running",
+    status: "pending",
     steps: createSteps(),
     input,
     output: null,
     createdAt: new Date().toISOString(),
   };
   RUNS.set(id, run);
+  return run;
+}
+
+export async function executeRun(input: ProductInput): Promise<AgentRun> {
+  const existingRun = Array.from(RUNS.values()).find(
+    (r) => r.input === input && r.status === "pending"
+  );
+  
+  const run: AgentRun = existingRun || createRunEntry(input);
+  run.status = "running";
 
   try {
     // Step 1: Normalize
