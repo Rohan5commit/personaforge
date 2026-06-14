@@ -1,15 +1,17 @@
 import OpenAI from "openai";
 
-const NIM_BASE_URL = "https://integrate.api.nvidia.com/v1";
-const NIM_API_KEY = process.env.NIM_API_KEY || "";
-const DEFAULT_MODEL = "meta/llama-3.3-70b-instruct";
-
-if (!NIM_API_KEY) {
-  console.warn("NIM_API_KEY is not set. AI inference will fail.");
+if (!process.env.NIM_API_KEY) {
+  throw new Error(
+    "NIM_API_KEY not set. Copy .env.example to .env.local and add your NVIDIA NIM key."
+  );
 }
 
+const NIM_BASE_URL = "https://integrate.api.nvidia.com/v1";
+const NIM_API_KEY = process.env.NIM_API_KEY;
+const DEFAULT_MODEL = "meta/llama-3.3-70b-instruct";
+
 const client = new OpenAI({
-  apiKey: NIM_API_KEY || "missing-key",
+  apiKey: NIM_API_KEY,
   baseURL: NIM_BASE_URL,
   timeout: 60000,
   maxRetries: 2,
