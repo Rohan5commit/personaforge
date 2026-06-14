@@ -131,7 +131,7 @@ export const AgentRunSchema = z.object({
   id: z.string(),
   status: z.enum(["pending", "running", "completed", "failed"]),
   steps: z.array(AgentStepSchema),
-  input: z.any(),
+  input: ProductInputSchema,
   output: RunOutputSchema.nullable(),
   createdAt: z.string(),
   completedAt: z.string().optional(),

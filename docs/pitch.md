@@ -13,7 +13,7 @@ PersonaForge autonomously generates synthetic but realistic customer personas, s
 This isn't a chatbot or a wrapper around a single prompt. PersonaForge uses a 6-agent pipeline where each agent has a specialized role, structured JSON output, and a critique/refinement loop. The critic agent scores persona diversity and triggers regeneration when quality is weak. Every output is validated against Zod schemas.
 
 ## Tech Stack
-- Next.js 15, TypeScript, Tailwind CSS v4, shadcn/ui
+- Next.js 16, TypeScript, Tailwind CSS v4, shadcn/ui
 - NVIDIA NIM (meta/llama-3.3-70b-instruct) for all AI inference
 - Modular agent pipeline with structured output
 - Deterministic clustering + model-driven synthesis

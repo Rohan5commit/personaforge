@@ -4,27 +4,20 @@ const NIM_BASE_URL = "https://integrate.api.nvidia.com/v1";
 const NIM_API_KEY = process.env.NIM_API_KEY || "";
 const DEFAULT_MODEL = "meta/llama-3.3-70b-instruct";
 
+if (!NIM_API_KEY) {
+  console.warn("NIM_API_KEY is not set. AI inference will fail.");
+}
+
 const client = new OpenAI({
-  apiKey: NIM_API_KEY,
+  apiKey: NIM_API_KEY || "missing-key",
   baseURL: NIM_BASE_URL,
+  timeout: 60000,
+  maxRetries: 2,
 });
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
-}
-
-export async function nimChat(
-  messages: ChatMessage[],
-  options?: { model?: string; temperature?: number; maxTokens?: number }
-): Promise<string> {
-  const response = await client.chat.completions.create({
-    model: options?.model || DEFAULT_MODEL,
-    messages,
-    temperature: options?.temperature ?? 0.7,
-    max_tokens: options?.maxTokens ?? 4096,
-  });
-  return response.choices[0]?.message?.content || "";
 }
 
 export async function nimStructured<T>(

@@ -24,13 +24,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const initial = saved || "dark";
     setTheme(initial);
     document.documentElement.classList.toggle("dark", initial === "dark");
+    document.documentElement.classList.toggle("light", initial === "light");
   }, []);
 
   const toggle = () => {
     setTheme((prev) => {
       const next = prev === "dark" ? "light" : "dark";
       localStorage.setItem("personaforge-theme", next);
-      document.documentElement.classList.toggle("dark", next === "dark");
+      document.documentElement.classList.remove("dark", "light");
+      document.documentElement.classList.add(next);
       return next;
     });
   };

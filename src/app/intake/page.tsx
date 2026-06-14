@@ -80,6 +80,7 @@ const PRESETS = [
 export default function IntakePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<ProductInput>({
     idea: "",
     description: "",
@@ -97,13 +98,14 @@ export default function IntakePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     try {
       const result = await startRun(form);
-      // Store full run data in localStorage for client-side access
       localStorage.setItem(`personaforge_run_${result.id}`, JSON.stringify(result));
       router.push(`/run/${result.id}`);
     } catch (err) {
       console.error(err);
+      setError("Something went wrong. Please try again.");
       setLoading(false);
     }
   };
@@ -166,8 +168,9 @@ export default function IntakePage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Target Audience *</Label>
+              <Label htmlFor="audienceType">Target Audience *</Label>
               <Input
+                id="audienceType"
                 placeholder="e.g., College students"
                 value={form.audienceType}
                 onChange={(e) =>
@@ -177,8 +180,9 @@ export default function IntakePage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Market / Geography *</Label>
+              <Label htmlFor="market">Market / Geography *</Label>
               <Input
+                id="market"
                 placeholder="e.g., US and Europe"
                 value={form.market}
                 onChange={(e) => setForm({ ...form, market: e.target.value })}
@@ -235,6 +239,12 @@ export default function IntakePage() {
               onChange={(e) => setForm({ ...form, website: e.target.value })}
             />
           </div>
+
+          {error && (
+            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
 
           <Button
             type="submit"

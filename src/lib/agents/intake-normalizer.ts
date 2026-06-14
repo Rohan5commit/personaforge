@@ -5,9 +5,9 @@ export async function normalizeIntake(input: ProductInput): Promise<ProductInput
     ...input,
     description: input.description.trim(),
     idea: input.idea.trim(),
-    audienceType: input.audienceType.toLowerCase(),
-    market: input.market.toLowerCase(),
-    pricingModel: input.pricingModel.toLowerCase(),
-    stage: input.stage.toLowerCase(),
+    audienceType: input.audienceType.trim(),
+    market: input.market.trim(),
+    pricingModel: input.pricingModel.trim(),
+    stage: input.stage.trim(),
   };
 }

@@ -113,16 +113,14 @@ export function createRunEntry(input: ProductInput): AgentRun {
 }
 
 // Demo data for fast demo mode
-function getDemoData(input: ProductInput): {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function getDemoData(_input: ProductInput): {
   personas: Persona[];
   interviews: InterviewResponse[];
   scores: PersonaScore[];
   insights: InsightSummary;
   brief: LaunchBrief;
 } {
-  const isStudyAssistant = input.idea.toLowerCase().includes("study");
-  const isFintech = input.idea.toLowerCase().includes("budget") || input.idea.toLowerCase().includes("fintech");
-
   const personas: Persona[] = [
     {
       id: "p1", name: "Sarah Chen", ageRange: "22-26", role: "Graduate Student",
@@ -230,12 +228,12 @@ function getDemoData(input: ProductInput): {
     ],
   }));
 
-  const scores: PersonaScore[] = personas.map((p) => ({
+  const scores: PersonaScore[] = personas.map((p, i) => ({
     personaId: p.id,
-    diversityScore: 0.75 + Math.random() * 0.2,
-    realismScore: 0.8 + Math.random() * 0.15,
-    uniquenessScore: 0.7 + Math.random() * 0.25,
-    overallScore: 0.75 + Math.random() * 0.2,
+    diversityScore: 0.78 + (i * 0.03),
+    realismScore: 0.82 + (i * 0.02),
+    uniquenessScore: 0.75 + (i * 0.03),
+    overallScore: 0.78 + (i * 0.025),
   }));
 
   const insights: InsightSummary = {

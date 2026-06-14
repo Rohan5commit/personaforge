@@ -17,28 +17,33 @@ interface StepStatus {
   retryCount: number;
 }
 
+function getInitialSteps(id: string): { steps: StepStatus[]; status: string; complete: boolean } {
+  if (typeof window === "undefined") return { steps: [], status: "pending", complete: false };
+  try {
+    const stored = localStorage.getItem(`personaforge_run_${id}`);
+    if (stored) {
+      const data = JSON.parse(stored);
+      return {
+        steps: data.steps || [],
+        status: data.status || "pending",
+        complete: data.status === "completed",
+      };
+    }
+  } catch {}
+  return { steps: [], status: "pending", complete: false };
+}
+
 export default function RunPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const [steps, setSteps] = useState<StepStatus[]>([]);
-  const [overallStatus, setOverallStatus] = useState<string>("pending");
+  const initial = getInitialSteps(id);
+  const [steps, setSteps] = useState<StepStatus[]>(initial.steps);
+  const [overallStatus, setOverallStatus] = useState<string>(initial.status);
 
   useEffect(() => {
-    // First check localStorage for instant completion
-    const stored = localStorage.getItem(`personaforge_run_${id}`);
-    if (stored) {
-      try {
-        const data = JSON.parse(stored);
-        if (data.status === "completed") {
-          // Already complete, redirect immediately
-          router.push(`/insights/${id}`);
-          return;
-        }
-        if (data.steps) {
-          setSteps(data.steps);
-          setOverallStatus(data.status);
-        }
-      } catch {}
+    if (initial.complete) {
+      router.push(`/insights/${id}`);
+      return;
     }
 
     const poll = async () => {
@@ -60,7 +65,7 @@ export default function RunPage({ params }: { params: Promise<{ id: string }> })
     poll();
     const interval = setInterval(poll, 2000);
     return () => clearInterval(interval);
-  }, [id, router]);
+  }, [id, router, initial.complete]);
 
   const completedCount = steps.filter((s) => s.status === "completed").length;
   const progress = steps.length > 0 ? (completedCount / steps.length) * 100 : 0;

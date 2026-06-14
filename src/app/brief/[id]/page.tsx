@@ -19,28 +19,66 @@ import { getRunResults } from "@/app/actions";
 import { getRunFromStorage } from "@/lib/client-storage";
 import type { LaunchBrief, ProductInput } from "@/lib/schemas";
 
+function getInitialData(id: string) {
+  const stored = getRunFromStorage(id);
+  if (stored?.output) {
+    return { brief: stored.output.brief as LaunchBrief, input: stored.input as ProductInput };
+  }
+  return null;
+}
+
 export default function BriefPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const [brief, setBrief] = useState<LaunchBrief | null>(null);
-  const [input, setInput] = useState<ProductInput | null>(null);
+  const initial = getInitialData(id);
+  const [brief, setBrief] = useState<LaunchBrief | null>(() => initial?.brief ?? null);
+  const [input, setInput] = useState<ProductInput | null>(() => initial?.input ?? null);
+  const [error, setError] = useState(() => !initial);
 
   useEffect(() => {
-    // Try localStorage first
-    const stored = getRunFromStorage(id);
-    if (stored?.output) {
-      setBrief(stored.output.brief);
-      setInput(stored.input);
-      return;
-    }
+    if (brief && input) return;
 
-    // Fallback to server action
+    const controller = new AbortController();
+
     getRunResults(id).then((run) => {
+      if (controller.signal.aborted) return;
       if (run?.output) {
         setBrief(run.output.brief);
         setInput(run.input);
+        setError(false);
+      } else {
+        setError(true);
       }
+    }).catch(() => {
+      if (!controller.signal.aborted) setError(true);
     });
-  }, [id]);
+
+    const timeout = setTimeout(() => {
+      if (!controller.signal.aborted) setError(true);
+    }, 15000);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeout);
+    };
+  }, [id, brief, input]);
+
+  if (error) {
+    return (
+      <div className="min-h-screen">
+        <Nav />
+        <div className="flex flex-col items-center justify-center py-32 text-center">
+          <AlertTriangle className="h-12 w-12 text-orange-500 mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Results not found</h2>
+          <p className="text-muted-foreground mb-6">
+            This run may have expired or the data is no longer available.
+          </p>
+          <Link href="/intake">
+            <Button>Start a New Run</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!brief || !input) {
     return (

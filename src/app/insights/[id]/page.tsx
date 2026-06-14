@@ -22,37 +22,77 @@ import { getRunResults } from "@/app/actions";
 import { getRunFromStorage } from "@/lib/client-storage";
 import type { InsightSummary, Persona, PersonaScore } from "@/lib/schemas";
 
+type DataState = {
+  insight: InsightSummary;
+  personas: Persona[];
+  scores: PersonaScore[];
+} | null;
+
+function getInitialData(id: string): DataState {
+  const stored = getRunFromStorage(id);
+  if (stored?.output) {
+    return {
+      insight: stored.output.insights,
+      personas: stored.output.personas,
+      scores: stored.output.scores,
+    };
+  }
+  return null;
+}
+
 export default function InsightsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const [data, setData] = useState<{
-    insight: InsightSummary;
-    personas: Persona[];
-    scores: PersonaScore[];
-  } | null>(null);
+  const [data, setData] = useState<DataState>(() => getInitialData(id));
+  const [error, setError] = useState(() => !getInitialData(id));
 
   useEffect(() => {
-    // Try localStorage first (instant)
-    const stored = getRunFromStorage(id);
-    if (stored?.output) {
-      setData({
-        insight: stored.output.insights,
-        personas: stored.output.personas,
-        scores: stored.output.scores,
-      });
-      return;
-    }
+    if (data) return;
 
-    // Fallback to server action
+    const controller = new AbortController();
+
     getRunResults(id).then((run) => {
+      if (controller.signal.aborted) return;
       if (run?.output) {
         setData({
           insight: run.output.insights,
           personas: run.output.personas,
           scores: run.output.scores,
         });
+        setError(false);
+      } else {
+        setError(true);
       }
+    }).catch(() => {
+      if (!controller.signal.aborted) setError(true);
     });
-  }, [id]);
+
+    const timeout = setTimeout(() => {
+      if (!controller.signal.aborted) setError(true);
+    }, 15000);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeout);
+    };
+  }, [id, data]);
+
+  if (error && !data) {
+    return (
+      <div className="min-h-screen">
+        <Nav />
+        <div className="flex flex-col items-center justify-center py-32 text-center">
+          <AlertTriangle className="h-12 w-12 text-orange-500 mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Results not found</h2>
+          <p className="text-muted-foreground mb-6">
+            This run may have expired or the data is no longer available.
+          </p>
+          <Link href="/intake">
+            <Button>Start a New Run</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!data) {
     return (

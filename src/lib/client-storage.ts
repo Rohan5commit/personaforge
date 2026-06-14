@@ -8,10 +8,3 @@ export function getRunFromStorage(id: string) {
   } catch {}
   return null;
 }
-
-export function saveRunToStorage(id: string, data: unknown) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(`personaforge_run_${id}`, JSON.stringify(data));
-  } catch {}
-}

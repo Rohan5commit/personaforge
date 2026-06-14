@@ -15,36 +15,45 @@ import {
   Frown,
   Wrench,
   BarChart3,
+  AlertTriangle,
 } from "lucide-react";
 import { getRunResults } from "@/app/actions";
 import { getRunFromStorage } from "@/lib/client-storage";
 import type { Persona, InterviewResponse, PersonaScore, InsightSummary } from "@/lib/schemas";
 
+type PersonaData = {
+  personas: Persona[];
+  interviews: InterviewResponse[];
+  scores: PersonaScore[];
+  insights: InsightSummary;
+} | null;
+
+function getInitialData(id: string): PersonaData {
+  const stored = getRunFromStorage(id);
+  if (stored?.output) {
+    return {
+      personas: stored.output.personas,
+      interviews: stored.output.interviews,
+      scores: stored.output.scores,
+      insights: stored.output.insights,
+    };
+  }
+  return null;
+}
+
 export default function PersonasPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const [data, setData] = useState<{
-    personas: Persona[];
-    interviews: InterviewResponse[];
-    scores: PersonaScore[];
-    insights: InsightSummary;
-  } | null>(null);
+  const [data, setData] = useState<PersonaData>(() => getInitialData(id));
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
+  const [error, setError] = useState(() => !getInitialData(id));
 
   useEffect(() => {
-    // Try localStorage first
-    const stored = getRunFromStorage(id);
-    if (stored?.output) {
-      setData({
-        personas: stored.output.personas,
-        interviews: stored.output.interviews,
-        scores: stored.output.scores,
-        insights: stored.output.insights,
-      });
-      return;
-    }
+    if (data) return;
 
-    // Fallback to server action
+    const controller = new AbortController();
+
     getRunResults(id).then((run) => {
+      if (controller.signal.aborted) return;
       if (run?.output) {
         setData({
           personas: run.output.personas,
@@ -52,9 +61,41 @@ export default function PersonasPage({ params }: { params: Promise<{ id: string 
           scores: run.output.scores,
           insights: run.output.insights,
         });
+        setError(false);
+      } else {
+        setError(true);
       }
+    }).catch(() => {
+      if (!controller.signal.aborted) setError(true);
     });
-  }, [id]);
+
+    const timeout = setTimeout(() => {
+      if (!controller.signal.aborted) setError(true);
+    }, 15000);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeout);
+    };
+  }, [id, data]);
+
+  if (error) {
+    return (
+      <div className="min-h-screen">
+        <Nav />
+        <div className="flex flex-col items-center justify-center py-32 text-center">
+          <AlertTriangle className="h-12 w-12 text-orange-500 mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Results not found</h2>
+          <p className="text-muted-foreground mb-6">
+            This run may have expired or the data is no longer available.
+          </p>
+          <Link href="/intake">
+            <Button>Start a New Run</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!data) {
     return (

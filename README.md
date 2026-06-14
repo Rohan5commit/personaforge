@@ -33,7 +33,7 @@ Every agent outputs validated JSON matching a Zod schema. This prevents hallucin
 
 ## Tech Stack
 
-- **Frontend:** Next.js 15, React, TypeScript, Tailwind CSS v4, shadcn/ui
+- **Frontend:** Next.js 16, React, TypeScript, Tailwind CSS v4, shadcn/ui
 - **AI Inference:** NVIDIA NIM (meta/llama-3.3-70b-instruct)
 - **Structured Output:** NIM `guided_json` with Zod validation
 - **Deployment:** Vercel
@@ -58,7 +58,7 @@ This is not a chatbot or a single-prompt wrapper. It uses:
 ### Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/personaforge.git
+git clone https://github.com/Rohan5commit/personaforge.git
 cd personaforge
 npm install
 ```

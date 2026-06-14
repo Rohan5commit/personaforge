@@ -9,7 +9,7 @@
 ## Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/personaforge.git
+git clone https://github.com/Rohan5commit/personaforge.git
 cd personaforge
 npm install
 ```
@@ -59,7 +59,8 @@ src/
 
 ```bash
 npm run lint
-npx tsc --noEmit
+npm run typecheck
+npm run test
 ```
 
 ## Troubleshooting
