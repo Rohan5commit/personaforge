@@ -1,19 +1,13 @@
 "use server";
 
-import { executeRun, getRun, getAllRuns } from "@/lib/agents/orchestrator";
+import { executeRun, getRun, getAllRuns, createRunEntry } from "@/lib/agents/orchestrator";
 import { ProductInput } from "@/lib/schemas";
 
 export async function startRun(input: ProductInput) {
-  // Create run entry first (fast)
-  const { createRunEntry } = await import("@/lib/agents/orchestrator");
-  const run = createRunEntry(input);
-
-  // Start pipeline in background (don't await - avoids Vercel timeout)
-  executeRun(input).catch((err) => {
-    console.error("Background pipeline error:", err);
-  });
-
-  return { id: run.id, status: "running" as const };
+  // Execute the full pipeline synchronously
+  // The run is stored in-memory and will be available on this instance
+  const run = await executeRun(input);
+  return { id: run.id, status: run.status };
 }
 
 export async function getRunStatus(id: string) {
