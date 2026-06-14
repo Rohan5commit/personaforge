@@ -19,7 +19,7 @@ import { healthPersonas, healthInterviews, healthScores, healthInsights, healthB
 import { creatorPersonas, creatorInterviews, creatorScores, creatorInsights, creatorBrief } from "./demo/creator";
 
 function generateId(): string {
-  return `run_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  return `run_${crypto.randomUUID()}`;
 }
 
 function createSteps(): AgentStep[] {
